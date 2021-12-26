@@ -8,9 +8,7 @@ import (
 	"myapp/mailer"
 	"os"
 	"os/signal"
-	"runtime"
 	"sync"
-	"time"
 )
 
 var scheduler *cron.Cron
@@ -70,8 +68,6 @@ func main() {
 		_ = <-c
 		fmt.Println("Shutting down...")
 		scheduler.Stop()
-		time.Sleep(20 * time.Second)
-		fmt.Println(runtime.NumGoroutine())
 		_ = app.Shutdown()
 	}()
 

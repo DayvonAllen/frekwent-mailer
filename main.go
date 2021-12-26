@@ -18,7 +18,7 @@ func init() {
 func main() {
 	app := fiber.New()
 
-	//go mailer.SendTestMessage()
+	go mailer.SendTestMessage()
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)

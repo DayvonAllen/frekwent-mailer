@@ -250,7 +250,7 @@ func SendTestMessage() {
 	msg := Message{
 		From: config.Config("BUSINESS_EMAIL"),
 		To: config.Config("MY_EMAIL"),
-		Subject: "test subject - sent by send grid",
+		Subject: "test subject - sent by send grid2",
 		Template: "test",
 		Attachments: nil,
 		Data: nil,

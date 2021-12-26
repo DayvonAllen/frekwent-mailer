@@ -1,5 +1,7 @@
 package mailer
 
+import "github.com/robfig/cron/v3"
+
 type Mail struct {
 	// where mail is coming from
 	Domain string
@@ -15,10 +17,7 @@ type Mail struct {
 	Jobs        chan Message
 	// what happened when we tried to send mail
 	Results chan Result
-	// which email api we are using(optional, get rid of for an app that is using only one API)
-	API    string
-	APIKey string
-	APIUrl string
+	Scheduler *cron.Cron
 }
 
 var Instance *Mail

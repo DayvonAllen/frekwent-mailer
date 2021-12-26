@@ -6,6 +6,7 @@ import (
 )
 
 type Status int32
+type EmailType int32
 
 const (
 	Success Status = iota
@@ -13,9 +14,15 @@ const (
 	Failed
 )
 
+const (
+	CouponPromotion EmailType = iota
+	Purchased
+	CustomerInteraction
+)
+
 type Email struct {
 	Id            primitive.ObjectID `bson:"_id" json:"id"`
-	Type          string             `bson:"type" json:"type"`
+	Type          EmailType          `bson:"type" json:"type"`
 	CustomerEmail string             `bson:"customerEmail" json:"customerEmail"`
 	From          string             `bson:"from" json:"from"`
 	Content       string             `bson:"content" json:"content"`

@@ -6,6 +6,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"log"
 	"myapp/database"
+	"myapp/events"
 	"myapp/mailer"
 	"os"
 	"os/signal"
@@ -17,6 +18,7 @@ func init() {
 	_ = database.ConnectToDB()
 	mailer.Instance = mailer.CreateMailer()
 	go mailer.Instance.ListenForMail()
+	go events.CreateConsumer()
 
 	// cron job for resending failed emails
 	scheduler = cron.New(cron.WithChain(

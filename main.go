@@ -11,13 +11,15 @@ import (
 	"os/signal"
 )
 
+var scheduler *cron.Cron
+
 func init() {
 	_ = database.ConnectToDB()
 	mailer.Instance = mailer.CreateMailer()
 	go mailer.Instance.ListenForMail()
 
 	// cron job for resending failed emails
-	scheduler := cron.New(cron.WithChain(
+	scheduler = cron.New(cron.WithChain(
 		cron.Recover(cron.DefaultLogger),
 	))
 
@@ -29,6 +31,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	scheduler.Start()
 }
 
 func main() {
@@ -42,6 +46,7 @@ func main() {
 	go func() {
 		_ = <-c
 		fmt.Println("Shutting down...")
+		scheduler.Stop()
 		_ = app.Shutdown()
 	}()
 

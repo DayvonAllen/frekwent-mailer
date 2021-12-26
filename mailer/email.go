@@ -28,6 +28,9 @@ type Email struct {
 	Content       string             `bson:"content" json:"content"`
 	Subject       string             `bson:"subject" json:"subject"`
 	Status        Status             `bson:"status" json:"status"`
-	CreatedAt     time.Time          `bson:"createdAt" json:"-"`
+	Template      string             `bson:"template" json:"template"`
+	Attachments   []string           `bson:"attachments" json:"attachments"`
+	Data          interface{}        `bson:"data" json:"data"`
+	CreatedAt     time.Time          `bson:"createdAt" json:"createdAt"`
 	UpdatedAt     time.Time          `bson:"updatedAt" json:"updatedAt"`
 }

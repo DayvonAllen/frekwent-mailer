@@ -14,9 +14,9 @@ type Mail struct {
 	Encryption  string
 	FromName    string
 	FromAddress string
-	Jobs        chan Message
+	Jobs        chan Email
 	// what happened when we tried to send mail
-	Results chan Result
+	Results   chan Result
 	Scheduler *cron.Cron
 }
 

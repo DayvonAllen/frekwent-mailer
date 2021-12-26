@@ -5,8 +5,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/robfig/cron/v3"
 	"log"
-	"myapp/database"
-	"myapp/events"
 	"myapp/mailer"
 	"os"
 	"os/signal"
@@ -15,10 +13,10 @@ import (
 var scheduler *cron.Cron
 
 func init() {
-	_ = database.ConnectToDB()
+	//conn := database.ConnectToDB()
 	mailer.Instance = mailer.CreateMailer()
 	go mailer.Instance.ListenForMail()
-	go events.CreateConsumer()
+	go mailer.CreateConsumer()
 
 	// cron job for resending failed emails
 	scheduler = cron.New(cron.WithChain(
@@ -35,6 +33,11 @@ func init() {
 	}
 
 	scheduler.Start()
+
+	//_, err = conn.EmailCollection.DeleteMany(context.TODO(), bson.M{})
+	//if err != nil {
+	//	return
+	//}
 }
 
 func main() {

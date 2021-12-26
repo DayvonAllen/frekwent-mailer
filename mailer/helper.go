@@ -3,12 +3,9 @@ package mailer
 import (
 	"bytes"
 	"fmt"
-	"github.com/sendgrid/sendgrid-go"
-	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/vanng822/go-premailer/premailer"
 	legacyMail "github.com/xhit/go-simple-mail/v2"
 	"html/template"
-	"log"
 	"myapp/config"
 	"os"
 	"strconv"
@@ -32,42 +29,52 @@ func (m *Mail) ListenForMail() {
 	}
 }
 
-func (m *Mail) Send(msg Message) error {
-	formattedMessage, err := m.buildHTMLMessage(msg)
-	if err != nil {
-		return err
-	}
+//func (m *Mail) Send(msg Email) error {
+//	formattedMessage, err := m.buildHTMLMessage(msg)
+//	if err != nil {
+//		return err
+//	}
+//
+//	plainMessage, err := m.buildPlainTextMessage(msg)
+//	if err != nil {
+//		return err
+//	}
+//
+//	msg.From = config.Config("BUSINESS_EMAIL")
+//	msg.CustomerEmail = config.Config("MY_EMAIL")
+//
+//	from := mail.NewEmail("Frekwent", msg.From)
+//	subject := msg.Subject
+//	to := mail.NewEmail("Customer", msg.CustomerEmail)
+//	plainTextContent := plainMessage
+//	htmlContent := formattedMessage
+//	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+//	client := sendgrid.NewSendClient(config.Config("SENDGRID_API_KEY"))
+//	response, err := client.Send(message)
+//
+//	if err != nil {
+//		log.Println(err)
+//		return err
+//	} else {
+//		fmt.Println(response.StatusCode)
+//		fmt.Println(response.Body)
+//		fmt.Println(response.Headers)
+//	}
+//
+//	err = EmailRepoImpl{}.UpdateEmailStatus(msg.Id, Success)
+//
+//	if err != nil {
+//		return err
+//	}
+//
+//	msg.Status = Success
+//
+//	ProducerMessage(&msg)
+//
+//	return nil
+//}
 
-	plainMessage, err := m.buildPlainTextMessage(msg)
-	if err != nil {
-		return err
-	}
-
-	msg.From = config.Config("BUSINESS_EMAIL")
-	msg.To = config.Config("MY_EMAIL")
-
-	from := mail.NewEmail("Frekwent", msg.From)
-	subject := msg.Subject
-	to := mail.NewEmail("Customer", msg.To)
-	plainTextContent := plainMessage
-	htmlContent := formattedMessage
-	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(config.Config("SENDGRID_API_KEY"))
-	response, err := client.Send(message)
-
-	if err != nil {
-		log.Println(err)
-		return err
-	} else {
-		fmt.Println(response.StatusCode)
-		fmt.Println(response.Body)
-		fmt.Println(response.Headers)
-	}
-
-	return nil
-}
-
-func (m *Mail) SendSMTPMessage(msg Message) error {
+func (m *Mail) SendSMTPMessage(msg Email) error {
 	formattedMessage, err := m.buildHTMLMessage(msg)
 	if err != nil {
 		return err
@@ -98,7 +105,7 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 
 	email := legacyMail.NewMSG()
 	email.SetFrom(msg.From).
-		AddTo(msg.To).
+		AddTo(msg.CustomerEmail).
 		SetSubject(msg.Subject)
 
 	email.SetBody(legacyMail.TextHTML, formattedMessage)
@@ -115,13 +122,24 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 	err = email.Send(smtpClient)
 
 	if err != nil {
+		_ = EmailRepoImpl{}.UpdateEmailStatus(msg.Id, Failed)
 		return err
 	}
+
+	err = EmailRepoImpl{}.UpdateEmailStatus(msg.Id, Success)
+
+	if err != nil {
+		return err
+	}
+
+	msg.Status = Success
+
+	ProducerMessage(&msg)
 
 	return nil
 }
 
-func (m *Mail) buildHTMLMessage(msg Message) (string, error) {
+func (m *Mail) buildHTMLMessage(msg Email) (string, error) {
 	// using go templates
 	templateToRender := fmt.Sprintf("%s/%s.html.tmpl", m.Templates, msg.Template)
 
@@ -150,7 +168,7 @@ func (m *Mail) buildHTMLMessage(msg Message) (string, error) {
 	return formattedMessage, nil
 }
 
-func (m *Mail) buildPlainTextMessage(msg Message) (string, error) {
+func (m *Mail) buildPlainTextMessage(msg Email) (string, error) {
 	// using go templates
 	templateToRender := fmt.Sprintf("%s/%s.plain.tmpl", m.Templates, msg.Template)
 
@@ -231,29 +249,18 @@ func CreateMailer() *Mail {
 		Templates:   rootPath + "/mail",
 		Host:        config.Config("HOST"),
 		Port:        port,
-		Username:    config.Config("USERNAME"),
-		Password:    config.Config("PASSWORD"),
 		Encryption:  config.Config("ENCRYPTION"),
 		FromName:    config.Config("FROM_NAME"),
 		FromAddress: config.Config("FROM_ADDRESS"),
-		Jobs:        make(chan Message, 20),
+		Jobs:        make(chan Email, 20),
 		Results:     make(chan Result, 20),
 	}
 
 	return &m
 }
 
-func SendTestMessage() {
-	msg := Message{
-		From: config.Config("BUSINESS_EMAIL"),
-		To: config.Config("MY_EMAIL"),
-		Subject: "test subject - sent by send grid2",
-		Template: "test",
-		Attachments: nil,
-		Data: nil,
-	}
-
-	Instance.Jobs <- msg
+func SendMessage(email *Email) {
+	Instance.Jobs <- *email
 	res := <-Instance.Results
 
 	if res.Error != nil {

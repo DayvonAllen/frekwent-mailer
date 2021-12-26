@@ -1,12 +1,13 @@
-package events
+package mailer
 
 import (
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/vmihailenco/msgpack/v5"
 	"myapp/config"
 )
 
-func ProducerMessage() {
+func ProducerMessage(email *Email) {
 	p, err := kafka.NewProducer(&kafka.ConfigMap{
 		"bootstrap.servers": config.Config("BOOTSTRAP_SERVER"),
 		"security.protocol": "SASL_SSL",
@@ -34,14 +35,19 @@ func ProducerMessage() {
 		}
 	}()
 
+	fmt.Println(email)
+	b, err := msgpack.Marshal(*email)
+
+	if err != nil {
+		panic(err)
+	}
 	// Produce messages to topic (asynchronously)
 	topic := config.Config("PRODUCE_TOPIC")
-	for _, word := range []string{"Welcome", "to", "the", "Confluent", "Kafka", "Golang", "client"} {
-		p.Produce(&kafka.Message{
-			TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
-			Value:          []byte(word),
-		}, nil)
-	}
+
+	p.Produce(&kafka.Message{
+		TopicPartition: kafka.TopicPartition{Topic: &topic, Partition: kafka.PartitionAny},
+		Value:          b,
+	}, nil)
 
 	// Wait for message deliveries before shutting down
 	p.Flush(15 * 1000)

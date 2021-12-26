@@ -1,8 +1,9 @@
-package events
+package mailer
 
 import (
 	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/vmihailenco/msgpack/v5"
 	"myapp/config"
 )
 
@@ -30,6 +31,13 @@ func CreateConsumer() {
 		msg, err := c.ReadMessage(-1)
 		if err == nil {
 			fmt.Printf("Message on %s: %s\n", msg.TopicPartition, string(msg.Value))
+			email := new(Email)
+			err = msgpack.Unmarshal(msg.Value, email)
+			fmt.Println(email)
+			err = EmailRepoImpl{}.Create(email)
+			if err != nil {
+				fmt.Println(err)
+			}
 		} else {
 			// The client will automatically try to recover from all errors.
 			fmt.Printf("Consumer error: %v (%v)\n", err, msg)

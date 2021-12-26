@@ -3,9 +3,12 @@ package mailer
 import (
 	"bytes"
 	"fmt"
+	"github.com/sendgrid/sendgrid-go"
+	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"github.com/vanng822/go-premailer/premailer"
-	mail "github.com/xhit/go-simple-mail/v2"
+	legacyMail "github.com/xhit/go-simple-mail/v2"
 	"html/template"
+	"log"
 	"myapp/config"
 	"os"
 	"strconv"
@@ -30,9 +33,38 @@ func (m *Mail) ListenForMail() {
 }
 
 func (m *Mail) Send(msg Message) error {
-	// make a decision on whether we are using an SMTP server or API
+	formattedMessage, err := m.buildHTMLMessage(msg)
+	if err != nil {
+		return err
+	}
 
-	return m.SendSMTPMessage(msg)
+	plainMessage, err := m.buildPlainTextMessage(msg)
+	if err != nil {
+		return err
+	}
+
+	msg.From = config.Config("BUSINESS_EMAIL")
+	msg.To = config.Config("MY_EMAIL")
+
+	from := mail.NewEmail("Example User", msg.From)
+	subject := msg.Subject
+	to := mail.NewEmail("Example User", msg.To)
+	plainTextContent := plainMessage
+	htmlContent := formattedMessage
+	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
+	client := sendgrid.NewSendClient(config.Config("SENDGRID_API_KEY"))
+	response, err := client.Send(message)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	} else {
+		fmt.Println(response.StatusCode)
+		fmt.Println(response.Body)
+		fmt.Println(response.Headers)
+	}
+
+	return nil
 }
 
 func (m *Mail) SendSMTPMessage(msg Message) error {
@@ -46,14 +78,14 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 		return err
 	}
 
-	server := mail.NewSMTPClient()
+	server := legacyMail.NewSMTPClient()
 
 	server.Host = m.Host
 	server.Port = m.Port
 	server.Username = m.Username
 	server.Password = m.Password
 	server.Encryption = m.getEncryption(m.Encryption)
-	// keepAlive will keep a connection to the mail server alive at all times
+	// keepAlive will keep a connection to the legacyMail server alive at all times
 	server.KeepAlive = false
 	server.ConnectTimeout = 10 * time.Second
 	server.SendTimeout = 10 * time.Second
@@ -64,14 +96,14 @@ func (m *Mail) SendSMTPMessage(msg Message) error {
 		return err
 	}
 
-	email := mail.NewMSG()
+	email := legacyMail.NewMSG()
 	email.SetFrom(msg.From).
 		AddTo(msg.To).
 		SetSubject(msg.Subject)
 
-	email.SetBody(mail.TextHTML, formattedMessage)
+	email.SetBody(legacyMail.TextHTML, formattedMessage)
 	// alternative body, if html message fails to work properly
-	email.AddAlternative(mail.TextPlain, plainMessage)
+	email.AddAlternative(legacyMail.TextPlain, plainMessage)
 
 	if len(msg.Attachments) > 0 {
 		for _, x := range msg.Attachments {
@@ -140,19 +172,19 @@ func (m *Mail) buildPlainTextMessage(msg Message) (string, error) {
 	return plainMessage, nil
 }
 
-func (m *Mail) getEncryption(encryption string) mail.Encryption {
-	// constants for encryption types in mail.Encryption from the simple mail library
+func (m *Mail) getEncryption(encryption string) legacyMail.Encryption {
+	// constants for encryption types in legacyMail.Encryption from the simple legacyMail library
 	switch encryption {
 	// most common
 	case "tls":
-		return mail.EncryptionTLS
+		return legacyMail.EncryptionTLS
 	case "ssl":
-		return mail.EncryptionSSL
+		return legacyMail.EncryptionSSL
 	// for development only
 	case "none":
-		return mail.EncryptionNone
+		return legacyMail.EncryptionNone
 	default:
-		return mail.EncryptionTLS
+		return legacyMail.EncryptionTLS
 	}
 }
 
@@ -216,28 +248,19 @@ func CreateMailer() *Mail {
 
 func SendTestMessage() {
 	msg := Message{
-		From: "test@example.com",
-		To: "you@there.com",
-		Subject: "test subject - sent in dev mode",
+		From: config.Config("BUSINESS_EMAIL"),
+		To: config.Config("MY_EMAIL"),
+		Subject: "test subject - sent by send grid",
 		Template: "test",
 		Attachments: nil,
 		Data: nil,
 	}
 
-	// message for 3rd party API
-	//msg := Message{
-	//	From: "admin@secretstash.tech",
-	//	To: config.Config("MY_EMAIL"),
-	//	Subject: "test subject - sent using an api",
-	//	Template: "test",
-	//	Attachments: nil,
-	//	Data: nil,
-	//}
-
 	Instance.Jobs <- msg
 	res := <-Instance.Results
 
 	if res.Error != nil {
+		fmt.Println(res.Error)
 		fmt.Println("couldn't send email")
 	}
 }

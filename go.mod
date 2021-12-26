@@ -39,6 +39,8 @@ require (
 	github.com/ory/dockertest v3.3.5+incompatible // indirect
 	github.com/ory/dockertest/v3 v3.8.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/sendgrid/rest v2.6.6+incompatible // indirect
+	github.com/sendgrid/sendgrid-go v3.10.4+incompatible // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

@@ -8,6 +8,9 @@ import (
 	"myapp/mailer"
 	"os"
 	"os/signal"
+	"runtime"
+	"sync"
+	"time"
 )
 
 var scheduler *cron.Cron
@@ -25,7 +28,22 @@ func init() {
 
 	_, err := scheduler.AddFunc("@every 4h30m", func() {
 		// TODO check every 4 hours and 30 minutes for failed emails and try to resend them
-		fmt.Println("test")
+		stat := mailer.Failed
+		emails, err := mailer.EmailRepoImpl{}.FindAllByStatus(&stat)
+		if err != nil {
+			fmt.Println("none found")
+		}
+
+		var wg sync.WaitGroup
+		wg.Add(len(*emails))
+
+		for _, email := range *emails {
+			email := email
+			go func(e mailer.Email) {
+				defer wg.Done()
+				mailer.SendMessage(&email)
+			}(email)
+		}
 	})
 
 	if err != nil {
@@ -52,6 +70,8 @@ func main() {
 		_ = <-c
 		fmt.Println("Shutting down...")
 		scheduler.Stop()
+		time.Sleep(20 * time.Second)
+		fmt.Println(runtime.NumGoroutine())
 		_ = app.Shutdown()
 	}()
 

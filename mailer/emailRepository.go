@@ -7,4 +7,5 @@ import (
 type EmailRepo interface {
 	Create(email *Email) error
 	UpdateEmailStatus(primitive.ObjectID, Status) error
+	FindAllByStatus(*Status) (*[]Email, error)
 }

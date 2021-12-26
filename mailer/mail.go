@@ -20,3 +20,5 @@ type Mail struct {
 	APIKey string
 	APIUrl string
 }
+
+var Instance *Mail

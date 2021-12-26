@@ -181,7 +181,7 @@ func (m *Mail) inlineCSS(s string) (string, error) {
 }
 
 func CreateMailer() *Mail {
-	port, err := strconv.Atoi(config.Config("SMTP_PORT"))
+	port, err := strconv.Atoi(config.Config("PORT"))
 
 	if err != nil {
 		panic(err)
@@ -197,11 +197,11 @@ func CreateMailer() *Mail {
 	m := Mail{
 		Domain:      config.Config("MAIL_DOMAIN"),
 		Templates:   rootPath + "/mail",
-		Host:        config.Config("SMTP_HOST"),
+		Host:        config.Config("HOST"),
 		Port:        port,
-		Username:    config.Config("SMTP_USERNAME"),
-		Password:    config.Config("SMTP_PASSWORD"),
-		Encryption:  config.Config("SMTP_ENCRYPTION"),
+		Username:    config.Config("USERNAME"),
+		Password:    config.Config("PASSWORD"),
+		Encryption:  config.Config("ENCRYPTION"),
 		FromName:    config.Config("FROM_NAME"),
 		FromAddress: config.Config("FROM_ADDRESS"),
 		Jobs:        make(chan Message, 20),
@@ -212,4 +212,32 @@ func CreateMailer() *Mail {
 	}
 
 	return &m
+}
+
+func SendTestMessage() {
+	msg := Message{
+		From: "test@example.com",
+		To: "you@there.com",
+		Subject: "test subject - sent in dev mode",
+		Template: "test",
+		Attachments: nil,
+		Data: nil,
+	}
+
+	// message for 3rd party API
+	//msg := Message{
+	//	From: "admin@secretstash.tech",
+	//	To: config.Config("MY_EMAIL"),
+	//	Subject: "test subject - sent using an api",
+	//	Template: "test",
+	//	Attachments: nil,
+	//	Data: nil,
+	//}
+
+	Instance.Jobs <- msg
+	res := <-Instance.Results
+
+	if res.Error != nil {
+		fmt.Println("couldn't send email")
+	}
 }

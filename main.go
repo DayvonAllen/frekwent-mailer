@@ -10,16 +10,15 @@ import (
 	"os/signal"
 )
 
-var MailerInstance *mailer.Mail
-
 func init() {
 	_ = database.ConnectToDB()
-	MailerInstance = mailer.CreateMailer()
+	mailer.Instance = mailer.CreateMailer()
+	go mailer.Instance.ListenForMail()
 }
 func main() {
 	app := fiber.New()
 
-	fmt.Println(MailerInstance)
+	go mailer.SendTestMessage()
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)

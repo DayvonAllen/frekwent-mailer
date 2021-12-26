@@ -46,9 +46,9 @@ func (m *Mail) Send(msg Message) error {
 	msg.From = config.Config("BUSINESS_EMAIL")
 	msg.To = config.Config("MY_EMAIL")
 
-	from := mail.NewEmail("Example User", msg.From)
+	from := mail.NewEmail("Frekwent", msg.From)
 	subject := msg.Subject
-	to := mail.NewEmail("Example User", msg.To)
+	to := mail.NewEmail("Customer", msg.To)
 	plainTextContent := plainMessage
 	htmlContent := formattedMessage
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)

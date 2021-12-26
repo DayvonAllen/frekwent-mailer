@@ -21,8 +21,8 @@ func (m *Mail) ListenForMail() {
 		// take anything we get from the jobs type and do something with it
 		// msg listens for any incoming jobs on the jobs channel
 		msg := <-m.Jobs
-		// send message
-		err := m.Send(msg)
+		// send message, switch to send for production, SMTP is legacy and is used for dev purposes
+		err := m.SendSMTPMessage(msg)
 		if err != nil {
 			// send an error to the result channel and also set success to false
 			m.Results <- Result{false, err}

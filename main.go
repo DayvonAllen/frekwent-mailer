@@ -30,6 +30,7 @@ func init() {
 		panic(err)
 	}
 }
+
 func main() {
 	app := fiber.New()
 

@@ -8,10 +8,6 @@
 - Creates a mail client and allows us to add attachments and other nice things
 ---
 
-## Go Mail
-- Allows us to send emails using 3rd party APIs: mailgun, sparkpost and sendgrid
----
-
 ## Mailhog
 - `Install on MAC` - `brew update && brew install mailhog`
 - `Run mailhog` - just type `mailhog` in the terminal

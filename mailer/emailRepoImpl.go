@@ -26,9 +26,7 @@ func (e EmailRepoImpl) Create(email *Email) error {
 	if err != nil {
 		return fmt.Errorf("error processing data")
 	}
-
-	fmt.Println("Sending: %v", email)
-
+	
 	go SendMessage(email)
 
 	return nil

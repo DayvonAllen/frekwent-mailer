@@ -9,11 +9,7 @@ import (
 
 func CreateConsumer() {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": config.Config("BOOTSTRAP_SERVER"),
-		"security.protocol": "SASL_SSL",
-		"sasl.username":     config.Config("USERNAME"),
-		"sasl.password":     config.Config("PASSWORD"),
-		"sasl.mechanism":    "PLAIN",
+		"bootstrap.servers": "localhost:19092",
 		"group.id":          config.Config("CONSUMER_GROUP_ID"),
 		"auto.offset.reset": "earliest",
 	})

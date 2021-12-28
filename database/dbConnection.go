@@ -10,13 +10,12 @@ import (
 
 type Connection struct {
 	*mongo.Client
-	EmailCollection    *mongo.Collection
+	EmailCollection *mongo.Collection
 	*mongo.Database
 }
 
 func ConnectToDB() *Connection {
 	u := config.Config("DB_URL")
-
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

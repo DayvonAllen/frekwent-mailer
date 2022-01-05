@@ -1,42 +1,31 @@
 package database
 
 import (
-	"context"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/globalsign/mgo"
+	"log"
 	"myapp/config"
 	"time"
 )
 
-type Connection struct {
-	*mongo.Client
-	EmailCollection *mongo.Collection
-	*mongo.Database
-}
+var Sess = ConnectToDB()
+var DB = "Frekwent-emailer"
+var EMAILS = "emails"
 
-func ConnectToDB() *Connection {
+func ConnectToDB() *mgo.Session {
 	u := config.Config("DB_URL")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	mongoDBDialInfo := &mgo.DialInfo{
+		Addrs:    []string{u},
+		Timeout:  60 * time.Second,
+		Database: "Frekwent-emailer",
+	}
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(u))
-
+	mongoSession, err := mgo.DialWithInfo(mongoDBDialInfo)
 	if err != nil {
-		panic(err)
+		log.Fatalf("CreateSession: %s\n", err)
 	}
 
-	// create database
-	db := client.Database("frekwent-emailer")
+	mongoSession.SetMode(mgo.Monotonic, true)
 
-	// create collection
-	emailCollection := db.Collection("emails")
-
-	dbConnection := &Connection{
-		client,
-		emailCollection,
-		db,
-	}
-
-	return dbConnection
+	return mongoSession
 }

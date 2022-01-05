@@ -19,6 +19,13 @@ type EmailRepoImpl struct {
 func (e EmailRepoImpl) Create(email *Email) error {
 	conn := database.ConnectToDB()
 
+	defer func(conn *database.Connection, ctx context.Context) {
+		err := conn.Disconnect(ctx)
+		if err != nil {
+
+		}
+	}(conn, context.TODO())
+
 	email.Template = "test"
 
 	_, err := conn.EmailCollection.InsertOne(context.TODO(), email)
@@ -26,7 +33,7 @@ func (e EmailRepoImpl) Create(email *Email) error {
 	if err != nil {
 		return fmt.Errorf("error processing data")
 	}
-	
+
 	go SendMessage(email)
 
 	return nil
@@ -34,6 +41,13 @@ func (e EmailRepoImpl) Create(email *Email) error {
 
 func (e EmailRepoImpl) UpdateEmailStatus(id primitive.ObjectID, status Status) error {
 	conn := database.ConnectToDB()
+
+	defer func(conn *database.Connection, ctx context.Context) {
+		err := conn.Disconnect(ctx)
+		if err != nil {
+
+		}
+	}(conn, context.TODO())
 
 	_, err := conn.EmailCollection.UpdateByID(context.TODO(), id, bson.D{{"$set",
 		bson.D{{"updatedAt", time.Now()}, {"status", status}}}})
@@ -51,6 +65,13 @@ func (e EmailRepoImpl) UpdateEmailStatus(id primitive.ObjectID, status Status) e
 
 func (e EmailRepoImpl) FindAllByStatus(status *Status) (*[]Email, error) {
 	conn := database.ConnectToDB()
+
+	defer func(conn *database.Connection, ctx context.Context) {
+		err := conn.Disconnect(ctx)
+		if err != nil {
+
+		}
+	}(conn, context.TODO())
 
 	cur, err := conn.EmailCollection.Find(context.TODO(), bson.D{{"status", status}})
 

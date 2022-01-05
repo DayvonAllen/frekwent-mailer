@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/ansrivas/fiberprometheus/v2"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/pprof"
 	"github.com/robfig/cron/v3"
 	"log"
 	"myapp/mailer"
@@ -58,6 +60,12 @@ func init() {
 
 func main() {
 	app := fiber.New()
+	prometheus := fiberprometheus.New("mailer")
+	prometheus.RegisterAt(app, "/metrics")
+
+	app.Use(prometheus.Middleware)
+
+	app.Use(pprof.New())
 
 	//go mailer.SendTestMessage()
 
